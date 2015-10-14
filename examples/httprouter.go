@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/facebook"
@@ -81,5 +80,5 @@ func main() {
 			return
 		}
 	})
-	log.Fatal(http.ListenAndServe(":8000", context.ClearHandler(r)))
+	log.Fatal(http.ListenAndServe(":8000", r))
 }

@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/gorilla/context"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/facebook"
 	"github.com/markbates/goth/providers/github"
@@ -58,7 +57,6 @@ func main() {
 		twitch.New(os.Getenv("TWITCH_KEY"), os.Getenv("TWITCH_SECRET"), BaseURL+"/auth/twitch/callback"),
 	)
 
-	goji.Use(context.ClearHandler)
 	goji.Get("/auth/:provider", func(c web.C, w http.ResponseWriter, r *http.Request) {
 		gothic.BeginAuthHandler(c.URLParams["provider"], w, r)
 	})

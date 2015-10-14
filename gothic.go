@@ -3,27 +3,51 @@ package gothic
 // this code is based on https://github.com/markbates/goth/blob/master/gothic/gothic.go
 
 import (
-	"encoding/gob"
 	"errors"
 	"net/http"
 	"os"
+	"time"
 
-	"github.com/gorilla/sessions"
+	"github.com/gorilla/securecookie"
 	"github.com/markbates/goth"
 )
 
-// SessionName is the key used to access the session store.
-const SessionName = "_gothic"
+// Options stores configuration for a secure cookie.
+//
+// Fields are a subset of http.Cookie fields.
+type Options struct {
+	Path   string
+	Domain string
+	// MaxAge=0 means no 'Max-Age' attribute specified.
+	// MaxAge<0 means delete cookie now, equivalently 'Max-Age: 0'.
+	// MaxAge>0 means Max-Age attribute present and given in seconds.
+	MaxAge   int
+	Secure   bool
+	HttpOnly bool
+}
 
-// Store can/should be set by applications using gothic. The default is a cookie store.
-var Store = sessions.NewCookieStore([]byte(os.Getenv("SESSION_SECRET")))
+// CookieName is the key used to access the secure cookie.
+var CookieName = "_gothic"
 
-type key int
+// CookieOptions is the options used to access the secure cookie.
+var CookieOptions = Options{
+	Path: "/",
+}
 
-const sessionKey key = 0
+var codecs []securecookie.Codec
 
 func init() {
-	gob.Register(sessionKey)
+	a := []byte(os.Getenv("GOTHIC_COOKIE_AUTH"))
+	if len(a) == 0 {
+		a = securecookie.GenerateRandomKey(64)
+	}
+
+	e := []byte(os.Getenv("GOTHIC_COOKIE_ENCRYPT"))
+	if len(e) == 0 {
+		codecs = securecookie.CodecsFromPairs(a)
+	} else {
+		codecs = securecookie.CodecsFromPairs(a, e)
+	}
 }
 
 /*
@@ -76,12 +100,12 @@ func GetAuthURL(providerName string, w http.ResponseWriter, r *http.Request) (st
 		return "", err
 	}
 
-	session, _ := Store.Get(r, SessionName)
-	session.Values[sessionKey] = sess.Marshal()
-	err = session.Save(r, w)
+	encoded, err := securecookie.EncodeMulti(CookieName, sess.Marshal(), codecs...)
 	if err != nil {
 		return "", err
 	}
+
+	http.SetCookie(w, cookie(CookieName, encoded, &CookieOptions))
 
 	return url, err
 }
@@ -98,13 +122,26 @@ var CompleteUserAuth = func(providerName string, w http.ResponseWriter, r *http.
 		return goth.User{}, err
 	}
 
-	session, _ := Store.Get(r, SessionName)
+	c, err := r.Cookie(CookieName)
+	if err != nil {
+		return goth.User{}, err
+	}
 
-	if session.Values[sessionKey] == nil {
+	if c.Value == "" {
 		return goth.User{}, errors.New("could not find a matching session for this request")
 	}
 
-	sess, err := provider.UnmarshalSession(session.Values[sessionKey].(string))
+	var ss string
+	err = securecookie.DecodeMulti(CookieName, c.Value, &ss, codecs...)
+	if err != nil {
+		return goth.User{}, err
+	}
+
+	co := CookieOptions
+	co.MaxAge = -1
+	http.SetCookie(w, cookie(CookieName, "", &co))
+
+	sess, err := provider.UnmarshalSession(ss)
 	if err != nil {
 		return goth.User{}, err
 	}
@@ -114,11 +151,24 @@ var CompleteUserAuth = func(providerName string, w http.ResponseWriter, r *http.
 		return goth.User{}, err
 	}
 
-	delete(session.Values, sessionKey)
-	err = session.Save(r, w)
-	if err != nil {
-		return goth.User{}, err
-	}
-
 	return provider.FetchUser(sess)
+}
+
+func cookie(name, value string, opt *Options) *http.Cookie {
+	c := http.Cookie{
+		Name:     name,
+		Value:    value,
+		Path:     opt.Path,
+		Domain:   opt.Domain,
+		MaxAge:   opt.MaxAge,
+		Secure:   opt.Secure,
+		HttpOnly: opt.HttpOnly,
+	}
+	switch {
+	case c.MaxAge < 0:
+		c.Expires = time.Unix(1, 0)
+	case c.MaxAge > 0:
+		c.Expires = time.Now().Add(time.Duration(c.MaxAge) * time.Second)
+	}
+	return &c
 }

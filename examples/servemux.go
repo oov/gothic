@@ -11,7 +11,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gorilla/context"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/facebook"
 	"github.com/markbates/goth/providers/github"
@@ -85,5 +84,5 @@ func main() {
 			return
 		}
 	})
-	log.Fatal(http.ListenAndServe(":8000", context.ClearHandler(http.DefaultServeMux)))
+	log.Fatal(http.ListenAndServe(":8000", nil))
 }
