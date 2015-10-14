@@ -3,6 +3,7 @@ package gothic
 // this code is based on https://github.com/markbates/goth/blob/master/gothic/gothic.go
 
 import (
+	"encoding/base64"
 	"errors"
 	"net/http"
 	"os"
@@ -36,6 +37,8 @@ var CookieOptions = Options{
 
 var codecs []securecookie.Codec
 
+const stateLen = 16
+
 func init() {
 	a := []byte(os.Getenv("GOTHIC_COOKIE_AUTH"))
 	if len(a) == 0 {
@@ -64,13 +67,6 @@ func BeginAuth(providerName string, w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
-// GetState gets the state string associated with the given request
-// This state is sent to the provider and can be retrieved during the
-// callback.
-var GetState = func(req *http.Request) string {
-	return req.URL.Query().Get("state")
-}
-
 // GetAuthURL starts the authentication process with the requested provided.
 // It will return a URL that should be used to send users to.
 //
@@ -82,7 +78,8 @@ func GetAuthURL(providerName string, w http.ResponseWriter, r *http.Request) (st
 		return "", err
 	}
 
-	sess, err := provider.BeginAuth(GetState(r))
+	state := base64.URLEncoding.EncodeToString(securecookie.GenerateRandomKey(stateLen * 3 / 4))
+	sess, err := provider.BeginAuth(state)
 	if err != nil {
 		return "", err
 	}
@@ -92,7 +89,7 @@ func GetAuthURL(providerName string, w http.ResponseWriter, r *http.Request) (st
 		return "", err
 	}
 
-	encoded, err := securecookie.EncodeMulti(CookieName, sess.Marshal(), codecs...)
+	encoded, err := securecookie.EncodeMulti(CookieName, state+sess.Marshal(), codecs...)
 	if err != nil {
 		return "", err
 	}
@@ -129,7 +126,13 @@ func CompleteUserAuth(providerName string, w http.ResponseWriter, r *http.Reques
 	co.MaxAge = -1
 	http.SetCookie(w, cookie(CookieName, "", &co))
 
-	sess, err := provider.UnmarshalSession(ss)
+	// verify state
+	rstate := r.URL.Query().Get("state")
+	if len(ss) < stateLen || (rstate != "" && rstate != ss[:stateLen]) {
+		return goth.User{}, errors.New("could not find a matching session for this request")
+	}
+
+	sess, err := provider.UnmarshalSession(ss[stateLen:])
 	if err != nil {
 		return goth.User{}, err
 	}
