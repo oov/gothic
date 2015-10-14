@@ -59,7 +59,7 @@ func init() {
 	}
 }
 
-// BeginAuth is a convienence handler for starting the authentication process.
+// BeginAuth is a convienence function for starting the authentication process.
 //
 // BeginAuth will redirect the user to the appropriate authentication end-point
 // for the requested provider.
@@ -76,8 +76,8 @@ func BeginAuth(providerName string, w http.ResponseWriter, r *http.Request) {
 // GetAuthURL starts the authentication process with the requested provided.
 // It will return a URL that should be used to send users to.
 //
-// I would recommend using the BeginAuthHandler instead of doing all of these steps
-// yourself, but that's entirely up to you.
+// I would recommend using the BeginAuth instead of doing all of these steps
+// yourself.
 func GetAuthURL(providerName string, w http.ResponseWriter, r *http.Request) (string, error) {
 	provider, err := goth.GetProvider(providerName)
 	if err != nil {
@@ -105,8 +105,8 @@ func GetAuthURL(providerName string, w http.ResponseWriter, r *http.Request) (st
 	return url, err
 }
 
-// CompleteUserAuth does what it says on the tin. It completes the authentication
-// process and fetches all of the basic information about the user from the provider.
+// CompleteUserAuth completes the authentication process and fetches all of the
+// basic information about the user from the provider.
 func CompleteUserAuth(providerName string, w http.ResponseWriter, r *http.Request) (goth.User, error) {
 	provider, err := goth.GetProvider(providerName)
 	if err != nil {
