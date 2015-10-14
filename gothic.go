@@ -35,6 +35,12 @@ var CookieOptions = Options{
 	Path: "/",
 }
 
+// StateUnsupportedProvider is the list of OAuth2.0 state parameter unsupported provider.
+var StateUnsupportedProvider = map[string]struct{}{
+	"twitter": struct{}{},
+	"lastfm":  struct{}{},
+}
+
 var codecs []securecookie.Codec
 
 const stateLen = 16
@@ -127,8 +133,8 @@ func CompleteUserAuth(providerName string, w http.ResponseWriter, r *http.Reques
 	http.SetCookie(w, cookie(CookieName, "", &co))
 
 	// verify state
-	rstate := r.URL.Query().Get("state")
-	if len(ss) < stateLen || (rstate != "" && rstate != ss[:stateLen]) {
+	_, stateUnsupported := StateUnsupportedProvider[providerName]
+	if len(ss) < stateLen || (!stateUnsupported && r.URL.Query().Get("state") != ss[:stateLen]) {
 		return goth.User{}, errors.New("could not find a matching session for this request")
 	}
 
