@@ -59,7 +59,7 @@ func main() {
 
 	r := httprouter.New()
 	r.GET("/auth/:provider", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		gothic.BeginAuthHandler(ps.ByName("provider"), w, r)
+		gothic.BeginAuth(ps.ByName("provider"), w, r)
 	})
 	r.GET("/auth/:provider/callback", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		user, err := gothic.CompleteUserAuth(ps.ByName("provider"), w, r)

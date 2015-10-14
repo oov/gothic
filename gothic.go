@@ -50,17 +50,11 @@ func init() {
 	}
 }
 
-/*
-BeginAuthHandler is a convienence handler for starting the authentication process.
-It expects to be able to get the name of the provider from the query parameters
-as either "provider" or ":provider".
-
-BeginAuthHandler will redirect the user to the appropriate authentication end-point
-for the requested provider.
-
-See https://github.com/markbates/goth/examples/main.go to see this in action.
-*/
-func BeginAuthHandler(providerName string, w http.ResponseWriter, r *http.Request) {
+// BeginAuth is a convienence handler for starting the authentication process.
+//
+// BeginAuth will redirect the user to the appropriate authentication end-point
+// for the requested provider.
+func BeginAuth(providerName string, w http.ResponseWriter, r *http.Request) {
 	url, err := GetAuthURL(providerName, w, r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -77,13 +71,11 @@ var GetState = func(req *http.Request) string {
 	return req.URL.Query().Get("state")
 }
 
-/*
-GetAuthURL starts the authentication process with the requested provided.
-It will return a URL that should be used to send users to.
-
-I would recommend using the BeginAuthHandler instead of doing all of these steps
-yourself, but that's entirely up to you.
-*/
+// GetAuthURL starts the authentication process with the requested provided.
+// It will return a URL that should be used to send users to.
+//
+// I would recommend using the BeginAuthHandler instead of doing all of these steps
+// yourself, but that's entirely up to you.
 func GetAuthURL(providerName string, w http.ResponseWriter, r *http.Request) (string, error) {
 	provider, err := goth.GetProvider(providerName)
 	if err != nil {
@@ -110,13 +102,9 @@ func GetAuthURL(providerName string, w http.ResponseWriter, r *http.Request) (st
 	return url, err
 }
 
-/*
-CompleteUserAuth does what it says on the tin. It completes the authentication
-process and fetches all of the basic information about the user from the provider.
-
-See https://github.com/markbates/goth/examples/main.go to see this in action.
-*/
-var CompleteUserAuth = func(providerName string, w http.ResponseWriter, r *http.Request) (goth.User, error) {
+// CompleteUserAuth does what it says on the tin. It completes the authentication
+// process and fetches all of the basic information about the user from the provider.
+func CompleteUserAuth(providerName string, w http.ResponseWriter, r *http.Request) (goth.User, error) {
 	provider, err := goth.GetProvider(providerName)
 	if err != nil {
 		return goth.User{}, err

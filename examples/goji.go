@@ -58,7 +58,7 @@ func main() {
 	)
 
 	goji.Get("/auth/:provider", func(c web.C, w http.ResponseWriter, r *http.Request) {
-		gothic.BeginAuthHandler(c.URLParams["provider"], w, r)
+		gothic.BeginAuth(c.URLParams["provider"], w, r)
 	})
 	goji.Get("/auth/:provider/callback", func(c web.C, w http.ResponseWriter, r *http.Request) {
 		user, err := gothic.CompleteUserAuth(c.URLParams["provider"], w, r)

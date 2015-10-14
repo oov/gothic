@@ -61,7 +61,7 @@ func main() {
 		ss := strings.SplitN(r.URL.Path, "/", 4)
 		switch {
 		case len(ss) == 3:
-			gothic.BeginAuthHandler(ss[2], w, r)
+			gothic.BeginAuth(ss[2], w, r)
 		case len(ss) == 4 && ss[3] == "callback":
 			user, err := gothic.CompleteUserAuth(ss[2], w, r)
 			if err != nil {
