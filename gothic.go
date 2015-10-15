@@ -63,14 +63,14 @@ func init() {
 //
 // BeginAuth will redirect the user to the appropriate authentication end-point
 // for the requested provider.
-func BeginAuth(providerName string, w http.ResponseWriter, r *http.Request) {
+func BeginAuth(providerName string, w http.ResponseWriter, r *http.Request) error {
 	url, err := GetAuthURL(providerName, w, r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
+		return err
 	}
 
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	return nil
 }
 
 // GetAuthURL starts the authentication process with the requested provided.
