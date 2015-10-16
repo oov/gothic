@@ -118,10 +118,6 @@ func CompleteUserAuth(providerName string, w http.ResponseWriter, r *http.Reques
 		return goth.User{}, err
 	}
 
-	if c.Value == "" {
-		return goth.User{}, errors.New("could not find a matching session for this request")
-	}
-
 	var ss string
 	err = securecookie.DecodeMulti(CookieName, c.Value, &ss, codecs...)
 	if err != nil {
@@ -135,7 +131,7 @@ func CompleteUserAuth(providerName string, w http.ResponseWriter, r *http.Reques
 	// verify state
 	_, stateUnsupported := StateUnsupportedProvider[providerName]
 	if len(ss) < stateLen || (!stateUnsupported && r.URL.Query().Get("state") != ss[:stateLen]) {
-		return goth.User{}, errors.New("could not find a matching session for this request")
+		return goth.User{}, errors.New("oauth 2.0 state parameter does not match")
 	}
 
 	sess, err := provider.UnmarshalSession(ss[stateLen:])
