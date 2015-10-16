@@ -65,7 +65,7 @@ func main() {
 		}
 	})
 	goji.Get("/auth/:provider/callback", func(c web.C, w http.ResponseWriter, r *http.Request) {
-		user, err := gothic.CompleteUserAuth(c.URLParams["provider"], w, r)
+		user, err := gothic.CompleteAuth(c.URLParams["provider"], w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -66,7 +66,7 @@ func main() {
 		}
 	})
 	r.GET("/auth/:provider/callback", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		user, err := gothic.CompleteUserAuth(ps.ByName("provider"), w, r)
+		user, err := gothic.CompleteAuth(ps.ByName("provider"), w, r)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

@@ -105,9 +105,9 @@ func GetAuthURL(providerName string, w http.ResponseWriter, r *http.Request) (st
 	return url, err
 }
 
-// CompleteUserAuth completes the authentication process and fetches all of the
+// CompleteAuth completes the authentication process and fetches all of the
 // basic information about the user from the provider.
-func CompleteUserAuth(providerName string, w http.ResponseWriter, r *http.Request) (goth.User, error) {
+func CompleteAuth(providerName string, w http.ResponseWriter, r *http.Request) (goth.User, error) {
 	provider, err := goth.GetProvider(providerName)
 	if err != nil {
 		return goth.User{}, err

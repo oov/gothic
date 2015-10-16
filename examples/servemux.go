@@ -67,7 +67,7 @@ func main() {
 				return
 			}
 		case len(ss) == 4 && ss[3] == "callback":
-			user, err := gothic.CompleteUserAuth(ss[2], w, r)
+			user, err := gothic.CompleteAuth(ss[2], w, r)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return

@@ -82,7 +82,7 @@ func TestCompleteAuth(t *testing.T) {
 	cookie := beginAuthCookie()
 	w, r := wr("GET", "/?state="+lastState, nil)
 	r.Header.Set("Cookie", cookie)
-	user, err := CompleteUserAuth(providerName, w, r)
+	user, err := CompleteAuth(providerName, w, r)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,7 +91,7 @@ func TestCompleteAuth(t *testing.T) {
 
 func TestCompleteAuthNoCookie(t *testing.T) {
 	w, r := wr("GET", "/", nil)
-	_, err := CompleteUserAuth(providerName, w, r)
+	_, err := CompleteAuth(providerName, w, r)
 	if err == nil {
 		t.Fatal("expected error got none")
 	}
@@ -104,7 +104,7 @@ func TestCompleteAuthNoCookie(t *testing.T) {
 func TestCompleteAuthBrokenCookie(t *testing.T) {
 	w, r := wr("GET", "/", nil)
 	r.Header.Set("Cookie", CookieName+"=broken value")
-	_, err := CompleteUserAuth(providerName, w, r)
+	_, err := CompleteAuth(providerName, w, r)
 	if err == nil {
 		t.Fatal("expected error got none")
 	}
@@ -117,7 +117,7 @@ func TestCompleteAuthBrokenCookie(t *testing.T) {
 func TestCompleteAuthStateMismatch(t *testing.T) {
 	w, r := wr("GET", "/", nil)
 	r.Header.Set("Cookie", beginAuthCookie())
-	_, err := CompleteUserAuth(providerName, w, r)
+	_, err := CompleteAuth(providerName, w, r)
 	if err == nil {
 		t.Fatal("expected error got none")
 	}
@@ -131,7 +131,7 @@ func TestCompleteAuthSkipStateCheck(t *testing.T) {
 	StateUnsupportedProvider[providerName] = struct{}{}
 	w, r := wr("GET", "/", nil)
 	r.Header.Set("Cookie", beginAuthCookie())
-	user, err := CompleteUserAuth(providerName, w, r)
+	user, err := CompleteAuth(providerName, w, r)
 	if err != nil {
 		t.Fatal(err)
 	}
