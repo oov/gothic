@@ -34,7 +34,7 @@ func beginAuthCookie() string {
 
 func verifyUser(t *testing.T, user goth.User) {
 	if user.Provider != providerName {
-		t.Errorf("expected user.Provider value %q got %q", user.Provider, providerName)
+		t.Errorf("expected user.Provider value %q got %q", providerName, user.Provider)
 	}
 	if user.AccessToken != userAccessToken {
 		t.Errorf("expected user.AccessToken value %q got %q", userAccessToken, user.AccessToken)
