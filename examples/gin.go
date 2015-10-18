@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/gin-gonic/gin"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/facebook"
 	"github.com/markbates/goth/providers/github"
@@ -57,32 +57,25 @@ func main() {
 <p>AccessToken: {{.AccessToken}}</p>
 `))
 
-	r := httprouter.New()
-	r.GET("/auth/:provider", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		err := gothic.BeginAuth(ps.ByName("provider"), w, r)
+	r := gin.Default()
+	r.SetHTMLTemplate(tpl)
+	r.GET("/auth/:provider", func(c *gin.Context) {
+		err := gothic.BeginAuth(c.Param("provider"), c.Writer, c.Request)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 	})
-	r.GET("/auth/:provider/callback", func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-		user, err := gothic.CompleteAuth(ps.ByName("provider"), w, r)
+	r.GET("/auth/:provider/callback", func(c *gin.Context) {
+		user, err := gothic.CompleteAuth(c.Param("provider"), c.Writer, c.Request)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
-		err = tpl.ExecuteTemplate(w, "user.html", user)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		c.HTML(http.StatusOK, "user.html", user)
 	})
-	r.GET("/", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
-		err = tpl.ExecuteTemplate(w, "index.html", nil)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", nil)
 	})
-	log.Fatal(http.ListenAndServe(":8000", r))
+	log.Fatal(r.Run(":8000"))
 }

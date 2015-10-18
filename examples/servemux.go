@@ -23,27 +23,6 @@ import (
 	"github.com/oov/gothic"
 )
 
-var indexTemplate = template.Must(template.New("").Parse(`
-<p><a href="/auth/twitter">Log in with Twitter</a></p>
-<p><a href="/auth/facebook">Log in with Facebook</a></p>
-<p><a href="/auth/gplus">Log in with GPlus</a></p>
-<p><a href="/auth/github">Log in with Github</a></p>
-<p><a href="/auth/spotify">Log in with Spotify</a></p>
-<p><a href="/auth/lastfm">Log in with LastFM</a></p>
-<p><a href="/auth/twitch">Log in with Twitch</a></p>
-`))
-
-var userTemplate = template.Must(template.New("").Parse(`
-<p>Name: {{.Name}}</p>
-<p>Email: {{.Email}}</p>
-<p>NickName: {{.NickName}}</p>
-<p>Location: {{.Location}}</p>
-<p>AvatarURL: {{.AvatarURL}} <img src="{{.AvatarURL}}"></p>
-<p>Description: {{.Description}}</p>
-<p>UserID: {{.UserID}}</p>
-<p>AccessToken: {{.AccessToken}}</p>
-`))
-
 func main() {
 	const BaseURL = "http://localhost:8000"
 	goth.UseProviders(
@@ -56,6 +35,27 @@ func main() {
 		lastfm.New(os.Getenv("LASTFM_KEY"), os.Getenv("LASTFM_SECRET"), BaseURL+"/auth/lastfm/callback"),
 		twitch.New(os.Getenv("TWITCH_KEY"), os.Getenv("TWITCH_SECRET"), BaseURL+"/auth/twitch/callback"),
 	)
+
+	tpl := template.New("")
+	template.Must(tpl.New("index.html").Parse(`
+<p><a href="/auth/twitter">Log in with Twitter</a></p>
+<p><a href="/auth/facebook">Log in with Facebook</a></p>
+<p><a href="/auth/gplus">Log in with GPlus</a></p>
+<p><a href="/auth/github">Log in with Github</a></p>
+<p><a href="/auth/spotify">Log in with Spotify</a></p>
+<p><a href="/auth/lastfm">Log in with LastFM</a></p>
+<p><a href="/auth/twitch">Log in with Twitch</a></p>
+`))
+	template.Must(tpl.New("user.html").Parse(`
+<p>Name: {{.Name}}</p>
+<p>Email: {{.Email}}</p>
+<p>NickName: {{.NickName}}</p>
+<p>Location: {{.Location}}</p>
+<p>AvatarURL: {{.AvatarURL}} <img src="{{.AvatarURL}}"></p>
+<p>Description: {{.Description}}</p>
+<p>UserID: {{.UserID}}</p>
+<p>AccessToken: {{.AccessToken}}</p>
+`))
 
 	http.HandleFunc("/auth/", func(w http.ResponseWriter, r *http.Request) {
 		ss := strings.SplitN(r.URL.Path, "/", 4)
@@ -72,7 +72,7 @@ func main() {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			err = userTemplate.Execute(w, user)
+			err = tpl.ExecuteTemplate(w, "user.html", user)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -82,7 +82,7 @@ func main() {
 		}
 	})
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		err := indexTemplate.Execute(w, nil)
+		err := tpl.ExecuteTemplate(w, "index.html", nil)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
