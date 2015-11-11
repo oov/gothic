@@ -76,6 +76,9 @@ func TestBeginAuth(t *testing.T) {
 	if w.Header().Get("Set-Cookie") == "" {
 		t.Error("expected cookie exists got none")
 	}
+	if !strings.Contains(w.Header().Get("Set-Cookie"), "HttpOnly") {
+		t.Error("expected HttpOnly in cookie got none")
+	}
 }
 
 func TestCompleteAuth(t *testing.T) {

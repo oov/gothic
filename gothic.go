@@ -32,7 +32,8 @@ var CookieName = "_gothic"
 
 // CookieOptions is the options used to access the secure cookie.
 var CookieOptions = Options{
-	Path: "/",
+	Path:     "/",
+	HttpOnly: true,
 }
 
 // StateUnsupportedProvider is the list of OAuth2.0 state parameter unsupported provider.
